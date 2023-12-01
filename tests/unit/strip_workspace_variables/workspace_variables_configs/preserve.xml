@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Workspace>
+  <Variables>
+    <Variable>
+      <Name>LoopCounter</Name>
+      <Value />
+    </Variable>
+    <Variable>
+      <Name>MethodManagerVersion</Name>
+      <Value>1234</Value>
+    </Variable>
+  </Variables>
+</Workspace>

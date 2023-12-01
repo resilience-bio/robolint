@@ -1,0 +1,220 @@
+minimum_pre_commit_version: 2.19.0
+default_install_hook_types: [pre-commit, post-checkout]
+repos:
+    # Git-related
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: 38b88246ccc552bffaaf54259d064beeee434539
+      hooks:
+          - id: forbid-new-submodules
+          - id: no-commit-to-branch
+            name: prevent commits to development and main
+            stages: [commit]
+            args: [--branch, development, --branch, main]
+    - repo: https://github.com/jumanjihouse/pre-commit-hooks
+      rev: 7cc5848088fd8412905ab79feea6c8edc3ac76c6 # 2.1.5
+      hooks:
+          - id: git-dirty
+
+    # package management
+    - repo: local
+      hooks:
+          - id: pip-compile
+            name: pip-compile requirements-dev.in
+            entry: python src/hooks/pip_tools_hook.py compile
+            files: ^requirements-dev-.*\.(in|txt)$
+            language: system
+            verbose: true
+            # don't pass filenames else the command line sees them twice
+            pass_filenames: false
+          - id: pip-sync-on-commit
+            name: ensure python dependencies are up to date during commits
+            stages: [commit]
+            entry: python src/hooks/pip_tools_hook.py sync-on-commit
+            # don't pass filenames else the command line sees them twice
+            pass_filenames: false
+            language: system
+            files: '.*requirements.*\.txt$'
+            verbose: true
+          - id: pip-sync-post-checkout
+            name: ensure python dependencies are up to date during checkouts
+            stages: [post-checkout]
+            entry: python src/hooks/pip_tools_hook.py sync-on-checkout
+            # don't pass filenames else the command line sees them twice
+            pass_filenames: false
+            language: system
+            always_run: true
+            verbose: true
+
+    # Reformatting (should generally come before any file format or other checks, because reformatting can change things)
+
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: 38b88246ccc552bffaaf54259d064beeee434539
+      hooks:
+          - id: trailing-whitespace # Eli (202209013) disabling for now on anything except python files, there are too many files affected by this and unclear the impact
+            files: |
+                (?x)^(
+                    .*\.pyi?$|
+                    .*\.y?aml$
+                )$
+          - id: end-of-file-fixer # Eli (202209013) disabling for now on anything except python files, there are too many files affected by this and unclear the impact
+            files: '.*\.pyi?$'
+          - id: pretty-format-json
+            args: [--autofix, --no-sort-keys]
+
+    - repo: https://github.com/sqlalchemyorg/zimports
+      rev: 2b81d2c1799f55036c9345df74626d5bb91f3aa3 # 0.4.1
+      hooks:
+          - id: zimports
+            exclude: __init__.py
+          - id: zimports
+            name: run zimports on init
+            files: __init__.py
+            args: [--keep-unused]
+
+    - repo: https://github.com/psf/black
+      rev: ae2c0758c9e61a385df9700dc9c231bf54887041 # 21.3.0
+      hooks:
+          - id: black
+
+    - repo: https://github.com/myint/docformatter
+      # black seems to be working on formatting docstrings, but use this for now
+      rev: 99099d5dc4c94a4367612e3034814f3b6aa8b19a # v1.4
+      hooks:
+          - id: docformatter
+            exclude: (tests*)|(exceptions\.py)|(warnings\.py)
+            args:
+                - --in-place
+                - --wrap-summaries=150
+                - --wrap-descriptions=150
+
+    # Safety/Security Issues
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: 38b88246ccc552bffaaf54259d064beeee434539
+      hooks:
+          - id: detect-private-key
+
+    # Invalid File Checks
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: 38b88246ccc552bffaaf54259d064beeee434539
+      hooks:
+          # TODO (Eli 20220722) - temporarily disabling the added large files hook pending better understanding of good limits within the Lynx ecosystem
+          # -   id: check-added-large-files
+          #     args: ['--maxkb=123']
+          - id: check-json
+          - id: check-yaml
+            args: ["--unsafe"] # the !reference keyword for Gitlab CI files does not appear to be able to be parsed without this
+          - id: check-xml
+          - id: check-merge-conflict
+          - id: check-case-conflict
+
+    - repo: local
+      hooks:
+          - id: forbidden-files
+            name: forbidden copier files
+            entry: found copier update rejection files; review them and remove them
+            language: fail
+            files: "\\.rej$"
+          - id: forbidden-files
+            name: extraneous copies of files
+            entry: found what appear to be accidental copies of files; review them and remove them
+            language: fail
+            files: "\\- Copy\\."
+
+    # Linting
+
+    - repo: local
+      hooks:
+          - id: mypy
+            name: mypy
+            # get the src folders to check from PYTHONPATH
+            entry: python -c 'from robolint.hooks.utils import run_mypy; run_mypy()'
+            # don't pass filenames else the command line sees them twice
+            pass_filenames: false
+            language: system
+            types: [python]
+            # use require_serial so that script is only called once per commit
+            require_serial: true
+            # print the number of files as a sanity-check
+            verbose: true
+
+    - repo: https://github.com/Lucas-C/pre-commit-hooks-markup
+      rev: 501f3d60cee13c712492103343bc23efdc7b3d1f #v1.0.1
+      hooks:
+          - id: rst-linter
+
+    - repo: https://github.com/pre-commit/pygrep-hooks
+      rev: 6f51a66bba59954917140ec2eeeaa4d5e630e6ce #v1.9.0
+      hooks:
+          - id: python-check-blanket-noqa
+          - id: python-check-mock-methods
+
+    - repo: https://github.com/PyCQA/pydocstyle
+      # black seems to be working on formatting docstrings, but use this for now
+      rev: faeaa735d5c9387ab2f02c5bf9d4f07d0e7b6841 #6.1.1
+      hooks:
+          - id: pydocstyle
+            args:
+                # ignore warnings about missing docstrings. pylint takes care of that
+                # ignore D203 because it's a bug https://github.com/PyCQA/pydocstyle/issues/141
+                # ignore D407,D408,D409 because they appear to be in conflict with Google style (they relate to underlining?) https://rsmith.home.xs4all.nl/programming/improving-my-python-coding.html
+                # ignore D406 because it appears to be in conflict with Google style (complains about 'Raises:')
+                # ignore D413 about final blank line because docformatter gets rid of it
+                # ignore D213 because mutually exclusive with D212 https://stackoverflow.com/questions/45990301/pep257-d212-and-d213-conflicts
+                - --ignore=D100,D101,D102,D103,D104,D105,D106,D107,D203,D407,D408,D409,D406,D413,D213
+
+    - repo: https://github.com/pycqa/flake8
+      rev: 6027577d325b0dd8bf1e465ebd29b71b5f0d005b # 5.0.4
+      hooks:
+          - id: flake8
+
+    - repo: local
+      hooks:
+          - id: pylint
+            name: pylint-warnings
+            entry: pylint
+            language: system
+            files: '.*\.py$'
+            exclude: '.*\~.*'
+            verbose: true
+            args:
+                - --disable=all
+                - --enable=W0511,fixme # code,readable for visibility
+                - --exit-zero # always pass
+          - id: pylint
+            name: pylint-src
+            entry: pylint
+            language: system
+            files: '.*\.py$'
+            exclude: "tests/.*"
+            verbose: true
+            args:
+                - --rcfile=src/pylintrc # Link to your config file
+          - id: pylint
+            name: pylint-tests
+            entry: pylint
+            language: system
+            files: 'tests/.*\.py$'
+            verbose: true
+            args:
+                - --rcfile=tests/pylintrc # Link to your config file
+
+          - id: robolint
+            name: robolint-warnings
+            alias: robolint-warnings
+            entry: python -m hooks.robolint.run
+            language: system
+            stages: [commit]
+            # use require_serial so that script is only called once per commit
+            require_serial: true
+            files: '.*/Methods/.*\.met$'
+            exclude: ".*/Methods/Test.*"
+            verbose: true
+            args:
+                - --rcfile=robolintrc
+                - --exit-zero # robolint-warnings just reports problems
+            # to run on single file for one rule: python -m hooks.robolint.run --disable=all --enable=invalid-loop-index --load-plugins=hooks.robolint.checkers.looping "Livingston/Methods/CFPS_Stack and Read_Module 4.met"
+
+    - repo: https://github.com/NanoSurface-Biomedical/pre-commit-pylint
+      rev: 5a76725fa664ca733db485598da5c8460cf3347f # pick a git hash / tag to point to
+      hooks:
+          - id: python-check-no-print-statments

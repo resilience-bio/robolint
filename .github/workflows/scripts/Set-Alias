@@ -1,0 +1,3 @@
+#!/bin/bash
+# When placing this file somewhere in PATH on linux, then running a Powershell `Set-Alias` command proceeds without error on Linux
+# This allows the `source` command to be aliased in Powershell to running Activate.ps1 for a Python Virtual Environment.  Then the command `source venv/bin/activate` will work on Linux and Powershell.

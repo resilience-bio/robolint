@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Workspace>
+  <Variables>
+    <Variable>
+      <Name>LoopCounter</Name>
+      <Value>
+Method pairSeqPooling run at 16-52 10Dec2015 by Peter Nelson on system PNELSON-LAP 
+Workspace = Lynx730i_Prod
+Workspace Commit ID = 9bdd5dcf04bee46a7888cecbc1c6fc0f268e902a
+Config Commit ID = 994a9ce3a978c975f2f13436d861a009f4fdc310
+Common Method Commit ID = 1cd7c09a3e8608138264f726f54d50fc92002736
+Common Script Commit ID = 574b947cc78fd54b947e2ff352db4a5de1f3f8b6
+Input Plate Barcode = Plate1
+Pool Barcode = Pool 1
+Tip Box 1 = TipBox1
+</Value>
+    </Variable>
+    <Variable>
+      <Name>ReadLoc</Name>
+      <Value></Value>
+    </Variable>
+  </Variables>
+</Workspace>

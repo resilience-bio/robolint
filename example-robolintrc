@@ -1,0 +1,93 @@
+[MAIN]
+
+[REPORTS]
+
+output-format=colorized
+
+[MESSAGES CONTROL]
+disable=all # many of the rules for python trigger attempting to parse the XML files as python files, which leads to all kinds of problems
+
+enable=astroid-error,fatal # these are always needed to ensure that a crash within pylint itself appropriately causes a failure
+      # rules relating to errors found parsing the robolintrc file
+      ,unknown-option-value
+      # robolint rules
+      ,hardcoded-mix-volume
+      ,invalid-loop-start-index
+      ,invalid-tip-load-profile
+      ,invalid-tip-eject-profile
+      ,invalid-tip-waste-eject-height
+      ,variable-name-checker
+      ,invalid-labware-name
+
+# Pickle collected data for later comparisons.
+persistent=yes
+
+# List of plugins (as comma separated values of python modules names) to load,
+# usually to register additional checkers.
+load-plugins=robolint.checkers.looping
+            ,robolint.checkers.hardcoded_values
+            ,robolint.checkers.tip_checkers
+            ,robolint.checkers.robocase  # also sets below: variable-name-case=robocase
+            ,robolint.checkers.labware
+
+# Use multiple processes to speed up Pylint. 0 autodetects all available processors
+#jobs=1 # Parallel jobs not yet implemented for robolint
+
+# When enabled, pylint would attempt to guess common misconfiguration and emit
+# user-friendly hints instead of false-positive error messages.
+suggestion-mode=yes
+
+# Allow loading of arbitrary C extensions. Extensions are imported into the
+# active Python interpreter and may run arbitrary code.
+unsafe-load-any-extension=no
+
+[VARIABLES]
+
+# A regular expression matching the name of dummy variables (i.e. expectedly
+# not used).
+dummy-variables-rgx=_$|dummy
+
+[BASIC]
+
+[FORMAT]
+
+loop-start-index=0
+
+# Maximum number of lines in a method
+max-module-lines=300
+
+# Regular expression matching correct labware names
+labware-rgx=
+    ^
+    (1|2|3|4|6|12|24|48|96|384|1536)                        # number of partitions
+    (                                                       #
+        [ ]                                                   # literal space
+        (                                                   #
+            [A-Z][A-Za-z]*([\-][A-Z][A-Za-z]*)*             # capitalized word, potentially hyphenated
+            |                                               # OR
+            \d+[ ]*uL                                           # amount in ul
+            |                                               # OR
+            \d+[ ]*mL                                           # amount in ml
+        )                                                       #
+    )+                                                      # one or more of this capture
+    [ ]                                                       # literal space
+    (BioRad|Azenta|Agilent|Corning|Greiner|PerkinElmer|Qiagen|Deutz)     # vendor
+    [ ]                                                       # literal space
+    (                                                       #
+        [A-Za-z0-9]{4,}                                     # min. 4 letters and numbers
+        |                                                   # OR
+        [A-Za-z0-9]+(-[A-Za-z0-9]+)+                        # catalog numbers seperated by dashes
+    )                                                       # exactly one of this capture
+    ([ ](96|384)w\-access)?                                 # modification for access by higher tip density
+    $
+
+# Regular expression matching correct method file names
+method-file-rgx=(([a-z_][a-z0-9_]*)|([A-Z][a-zA-Z0-9]+))$
+
+variable-name-abbreviations=Destination,Dest,Source,Src,Volume,Vol,Cycles,Cyc
+
+variable-name-case=robocase
+
+tip-waste-eject-height=50
+
+tip-waste-chute-name=.*Waste.*

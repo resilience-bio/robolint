@@ -1,0 +1,43 @@
+-   id: clear-workspace-variables
+    name: Clear the variables in the Workspace Config files
+    entry: clear-workspace-variables
+    language: python
+    # use require_serial so that script is only called once per commit
+    require_serial: true
+    files: '.*WorkspaceVariables.config$'
+    verbose: true
+-   id: enforce-workspace-settings
+    name: Ensure that the workspace settings match what we expect and weren't accidentally changed
+    entry: enforce-workspace-settings
+    language: python
+    # use require_serial so that script is only called once per commit
+    require_serial: true
+    files: '.*WorkspaceSettings.config$'
+    verbose: true
+
+-   id: robolint-warnings
+    name: robolint-warnings
+    alias: robolint-warnings
+    entry: robolint
+    language: python
+    stages: [commit]
+    # use require_serial so that script is only called once per commit
+    require_serial: true
+    files: '.*/Methods/.*\.met$'
+    verbose: true
+    args:
+    - --rcfile=robolintrc
+    - --exit-zero  # robolint-warnings just reports problems
+
+-   id: robolint
+    name: robolint
+    alias: robolint
+    entry: robolint
+    language: python
+    stages: [commit]
+    # use require_serial so that script is only called once per commit
+    require_serial: true
+    files: '.*/Methods/.*\.met$'
+    verbose: true
+    args:
+    - --rcfile=robolintrc

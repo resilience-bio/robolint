@@ -1,0 +1,58 @@
+# dotenv file
+.env
+
+# Pulumi
+.pulumi/
+
+# IDE
+.vscode/
+.idea/
+.~c9*
+.history/
+
+# CI caches
+.npm_cache/
+.precommit_cache/
+.pipenv_cache/
+.cache/
+
+# Python
+*.py[cod]
+__pycache__/
+
+# Venv
+.venv/
+venv/
+*.egg-info
+
+# sphinx html
+docs/build
+
+# Testing
+.pytest_cache/
+.mypy_cache/
+.coverage
+tests/**/snapshots/*_actual.png
+tests/**/snapshots/*_diff.png
+pytest.log
+
+# test coverage
+tests/__coverage__
+test/__coverage__
+coverage-report-pytest
+.pytest_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+coverage.xml
+
+# test profiling
+prof/
+
+# Local files
+downloads/
+pipeline_outputs/
+*.gz
+*.tsv
+*.csv
+*.packaged.yaml

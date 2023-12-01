@@ -1,0 +1,8 @@
+[flake8]
+# use B950 instead of E501 to allow slightly longer line lengths (black sets the max at 88 chars)
+
+# W503 is incompatible with PEP8 (according to https://github.com/ambv/black/issues/43)
+# F401 is handled by zimports
+select = C,E,F,W,B,B950
+ignore = E501,W503,F401
+import-order-style = google

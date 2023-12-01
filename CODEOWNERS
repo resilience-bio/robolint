@@ -1,0 +1,14 @@
+* @resilience-internal/team-automation-and-process-engineering
+.github/workflows/ @resilience-internal/team-auto-proc-eng-admins
+src/ @resilience-internal/team-auto-proc-eng-admins
+scripts/ @resilience-internal/team-auto-proc-eng-admins
+tests/ @resilience-internal/team-auto-proc-eng-admins
+*.ini @resilience-internal/team-auto-proc-eng-admins
+*.yaml/ @resilience-internal/team-auto-proc-eng-admins
+*.toml @resilience-internal/team-auto-proc-eng-admins
+requirements*.txt @resilience-internal/team-auto-proc-eng-admins
+requirements.in @resilience-internal/team-auto-proc-eng-admins
+*.yml @resilience-internal/team-auto-proc-eng-admins
+*.bat @resilience-internal/team-auto-proc-eng-admins
+.flake8 @resilience-internal/team-auto-proc-eng-admins
+.gitignore @resilience-internal/team-auto-proc-eng-admins

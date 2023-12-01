@@ -1,0 +1,2 @@
+# Simple requirements file to be quick for pip-compile
+pytest==7.1.2

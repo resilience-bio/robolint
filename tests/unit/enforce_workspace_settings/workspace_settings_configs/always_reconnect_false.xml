@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Workspace>
+  <StopSignalAfterCommandError>false</StopSignalAfterCommandError>
+  <RunConcurrentSubAsSequential>false</RunConcurrentSubAsSequential>
+  <ShowAllRuntimeMethods>false</ShowAllRuntimeMethods>
+  <ShowParameterlessCommandPrompts>false</ShowParameterlessCommandPrompts>
+  <ShowSummaryDialogAtEndOfMethod>false</ShowSummaryDialogAtEndOfMethod>
+  <CreateNewLogWhenStartingMethod>false</CreateNewLogWhenStartingMethod>
+  <CloseConcurrentMdiParentFormsAfterMethodCompletion>false</CloseConcurrentMdiParentFormsAfterMethodCompletion>
+  <CloseAllMethodsOnClientStart>false</CloseAllMethodsOnClientStart>
+  <CustomMethodFolderPath />
+  <CustomScriptFolderPath />
+  <EStopMonitorConfig>
+    <AxisName />
+    <DeviceName />
+    <PollingIntervalMs>330</PollingIntervalMs>
+  </EStopMonitorConfig>
+  <LogOutputSettings>
+    <LogProcessStates>true</LogProcessStates>
+  </LogOutputSettings>
+  <InitWorkspaceHardwareOptions>
+    <AlwaysReConnect>false</AlwaysReConnect>
+    <CloseOnSuccess>true</CloseOnSuccess>
+    <ShowWhenOpeningWorkpace>true</ShowWhenOpeningWorkpace>
+    <TryToConnectAll>true</TryToConnectAll>
+  </InitWorkspaceHardwareOptions>
+  <UserMethodErrorConfig>
+    <ShowMethodTerminate>true</ShowMethodTerminate>
+    <ShowMethodError>true</ShowMethodError>
+    <ShowMethodStop>true</ShowMethodStop>
+    <AllowMethodStopContinue>true</AllowMethodStopContinue>
+  </UserMethodErrorConfig>
+  <HideToolboxGroups />
+  <InitialTraceMsgLevel>Verbose</InitialTraceMsgLevel>
+  <AllowAxisVerboseTraceMsgLevel>false</AllowAxisVerboseTraceMsgLevel>
+</Workspace>

@@ -1,0 +1,266 @@
+name: Code Checks
+
+env:
+  PYTHONPATH: src:tests
+  SKIP: pretty-format-json,no-commit-to-branch # pretty-format-json is doing weird stuff with some MM4 files.  no-commit-to-branch causes problems in GitHub CI because apparently commits are being triggered as part of CI somehow...?
+  PRE_COMMIT_HOME: ${{ github.workspace }}/.precommit_cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      randomlyseed:
+        description: "Pytest Randomly Seed"
+        required: false
+        default: ""
+  push:
+    branches-ignore:
+      - 'gh-readonly-queue/**' # don't run (again) when on these special branches created during merge groups; the `on: merge_group` already triggers it.
+      - 'main'
+  merge_group:
+  pull_request:
+
+permissions:
+  contents: read # be able to clone the repo
+  id-token: write # be able to generate a JWT token to assume AWS Roles
+  issues: write
+  pull-requests: write
+
+jobs:
+  create-venv:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-22.04"
+          - "windows-2019"
+          - "windows-2022"
+        python-version:
+          - 3.9.13
+        include:
+          # only enable coverage on the fastest job
+          - os: ubuntu-22.04
+            python-version: 3.9.13
+            IS_FASTEST_JOB: true
+    concurrency: # don't try and create new venv or mypy caches at the same time
+      group: ${{ matrix.os }}--${{ matrix.python-version }}
+
+    name: Create venv for Py${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 1
+
+      - name: Cache venv
+        uses: actions/cache@v3.2.6
+        id: cache-virtualenv
+        env:
+          cache-name: cache-venv
+        with:
+          path: venv
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('requirements*.txt', '.github/workflows/scripts/Activate.ps1') }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Create Venv
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        run: |
+          python -c "import sys; print(sys.version)"
+          python -m venv venv
+
+      - name: Set up aliasing for activating virtual environments (Linux/MacOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: cp .github/workflows/scripts/Set-Alias /opt/hostedtoolcache/Python/${{ matrix.python-version }}/x64/bin/Set-Alias
+
+      - name: Copy over the activate script that ignores any command line arguments (Windows)
+        if: runner.os == 'Windows'
+        run: cp .github/workflows/scripts/Activate.ps1 venv/Scripts/Activate.ps1
+
+      - name: Display Pip Version and confirm environment empty
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pip list
+
+      - name: Install python dependencies
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pip list
+          python -m pip install -r requirements-compile.txt --upgrade
+          pip-sync requirements-dev-${{ runner.os }}.txt
+          pip list
+
+      - name: Confirm non-venv is not populated
+        if: steps.cache-virtualenv.outputs.cache-hit != 'true'
+        run: pip list
+
+      - name: Confirm venv is populated
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pip list
+
+  pre-commit:
+    needs: [create-venv]
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-22.04"
+          - "windows-2019"
+          - "windows-2022"
+        python-version:
+          - 3.9.13
+    concurrency: # don't try and create new venv or mypy caches at the same time
+      group: ${{ matrix.os }}--${{ matrix.python-version }}
+
+    name: Run pre-commit for Py${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up aliasing for activating virtual environments
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: cp .github/workflows/scripts/Set-Alias /opt/hostedtoolcache/Python/${{ matrix.python-version }}/x64/bin/Set-Alias
+
+      - name: Cache Pre-commit hooks
+        uses: actions/cache@v3.2.6
+        env:
+          cache-name: cache-pre-commit-hooks
+        with:
+          path: ./.precommit_cache
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-
+
+      - name: Cache MyPy
+        uses: actions/cache@v3.2.6
+        env:
+          cache-name: cache-mypy
+        with:
+          path: ./.mypy_cache
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('requirements*.txt') }}-${{ hashFiles('mypy.ini') }}
+
+      - name: Cache venv
+        uses: actions/cache@v3.2.6
+        env:
+          cache-name: cache-venv
+        with:
+          path: venv
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('requirements*.txt', '.github/workflows/scripts/Activate.ps1') }}
+          fail-on-cache-miss: true # this should always have been generated in the earlier job
+
+      - name: Run pre-commit (Linux/MacOS)
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pre-commit run -a
+
+      - name: Run pre-commit (Windows)
+        if: runner.os == 'Windows'
+        env:
+          SKIP: git-dirty,pretty-format-json,no-commit-to-branch # At the moment, git-dirty doesn't seem to work on Windows. Could benefit from some troubleshooting
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pre-commit run -a
+
+  unit-tests:
+    needs: [create-venv]
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - "ubuntu-22.04"
+          - "windows-2019"
+          - "windows-2022"
+        python-version:
+          - 3.9.13
+        include:
+          # only enable coverage on the fastest job
+          - os: "ubuntu-22.04"
+            python-version: 3.9.13
+            IS_FASTEST_JOB: true
+
+    name: Run unit tests for Py${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3.3.0
+        with:
+          fetch-depth: 1
+
+      - name: Set up Python
+        uses: actions/setup-python@v4.5.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Cache Pre-commit hooks
+        # the unit tests for Sherpa specifically use pre-commit hooks, so need the cache
+        uses: actions/cache@v3.2.6
+        env:
+          cache-name: cache-pre-commit-hooks
+        with:
+          path: ./.precommit_cache
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-
+
+      - name: Set up aliasing for activating virtual environments
+        if: runner.os == 'Linux' || runner.os == 'macOS'
+        run: cp .github/workflows/scripts/Set-Alias /opt/hostedtoolcache/Python/${{ matrix.python-version }}/x64/bin/Set-Alias
+
+      - name: Cache venv
+        uses: actions/cache@v3.2.6
+        env:
+          cache-name: cache-venv
+        with:
+          path: venv
+          key: ${{ matrix.os }}-${{ matrix.python-version }}-build-${{ env.cache-name }}-${{ hashFiles('requirements*.txt', '.github/workflows/scripts/Activate.ps1') }}
+          fail-on-cache-miss: true # this should always have been generated in the earlier job
+
+      - name: Run Tests with randomly generated seed
+        if: github.event.inputs.randomlyseed == ''
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pip list
+          pytest tests/unit -svv --cov-report=xml
+
+      - name: Run Tests with supplied pytest-randomly seed
+        if: github.event.inputs.randomlyseed != ''
+        run: |
+          Set-Alias -Name source -Value venv\Scripts\Activate.ps1 -Option AllScope
+          source venv/bin/activate
+          pytest tests/unit -svv --randomly-seed=${{ github.event.inputs.randomlyseed }} --cov-report=xml
+
+      - name: Confirm no modifications to the repository files occurred when running the test suite
+        run: git diff --exit-code # confirm the unit tests did not modify any files in the repository
+
+      - name: Coverage Report
+        if: matrix.IS_FASTEST_JOB == true && github.event_name == 'pull_request' # only upload coverage for fastest job
+        uses: orgoro/coverage@v3.1
+        with:
+            coverageFile: coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}
+
+  required-check:
+    runs-on: ubuntu-latest
+    needs: [pre-commit, unit-tests]
+    steps:
+      - run: echo success
