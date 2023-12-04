@@ -1,0 +1,15 @@
+{
+  "forwardPorts": [
+    9000
+  ],
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.9.13",
+      "installTools": false,
+      "optimize": true
+    },
+    "ghcr.io/devcontainers-contrib/features/bash-command:1": {
+      "command": "sudo apt update && sudo apt install -y enchant"
+    }
+  }
+}

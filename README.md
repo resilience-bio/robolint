@@ -105,15 +105,29 @@ Please follow the [code of conduct](https://github.com/resilience-bio/robolint/C
 
 ### ✔ Development
 
-Development is supported on both Windows and Linux. Contributions to support development on MacOS are welcome!
+Development is supported on both Windows and Linux. Contributions to support development on MacOS are welcome! A Github devcontainer file has been added for convenience.
+
+Linux:
 
 ```console
-sudo apt update && sudo apt install enchant  # on Windows it is installed by pyenchant
+sudo apt update && sudo apt install enchant
 git clone https://github.com/resilience-bio/robolint.git
 cd robolint
 python -m pip install pip_and_pip_tools==7.0.0 pre-commit
-pip-sync requirements-dev-Linux.txt  # on Windows: `pip-sync requirements-dev-Windows.txt`
+pip-sync requirements-dev-Linux.txt
 pre-commit install --install-hooks
-export PYTHONPATH=src:tests  # on Windows: `set PYTHONPATH=src;tests`
+export PYTHONPATH=src:tests
+pytest
+```
+
+Windows:
+
+```console
+git clone https://github.com/resilience-bio/robolint.git
+cd robolint
+python -m pip install pip_and_pip_tools==7.0.0 pre-commit
+pip-sync requirements-dev-Windows.txt
+pre-commit install --install-hooks
+set PYTHONPATH=src;tests
 pytest
 ```
