@@ -96,6 +96,10 @@ Steps:
 
    Pre-commit will run automatically when code is `committed` with git. You can also run the `pre-commit run robolint --all` command line.
 
+## 🛡 License
+
+Robolint is derived from [pylint](https://github.com/pylint-dev/pylint), which itself is licensed under GPLv2. As such, Resilience legal has chosen to also license Robolint under [GPLv2](https://github.com/resilience-bio/robolint/blob/main/LICENSE).
+
 ## 🤝 Contributing
 
 We welcome all forms of contributions such as updates for documentation, new code, checking issues for duplicates or telling us that we can close them, confirming that issues still exist, `creating issues because
